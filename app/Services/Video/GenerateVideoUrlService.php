@@ -39,7 +39,7 @@ class GenerateVideoUrlService
         $slug = $this->slugify($video);
         $videoHash = hash_hmac('sha256', $slug.'/master.m3u8', $this->hashSecret);
 
-        $url = url("/video/serve?video={$videoHash}&titre={$slug}&type=master");
+        $url = url("/api/video/serve?video={$videoHash}&titre={$slug}&type=master");
 
         return [
             'success' => true,

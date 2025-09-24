@@ -9,7 +9,7 @@ class User extends Model {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
 
-    protected $table = 'USERS';
+    protected $table = 'users';
     protected $primaryKey = 'ID';
 
     /**

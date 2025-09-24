@@ -21,7 +21,7 @@ class CheckEmailService
         if ($exists) {
             return [
                 'success' => false,
-                'error' => 'Cet e-mail est déjà inscrit à l\'application.',
+                'error' => 'Cet e-mail n\'est pas disponible',
                 'http_code' => 409,
             ];
         }

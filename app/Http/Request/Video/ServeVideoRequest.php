@@ -17,6 +17,7 @@ class ServeVideoRequest extends FormRequest
             'video' => ['required', 'string'],
             'titre' => ['required', 'string'],
             'type'  => ['required', 'string', 'in:master,480p,720p'], // adapter selon tes qualités
+            'segment' => ['sometimes', 'string'],
         ];
     }
 
@@ -33,5 +34,10 @@ class ServeVideoRequest extends FormRequest
     public function type(): string
     {
         return $this->query('type');
+    }
+    
+    public function videoSegment(): ?string
+    {
+        return $this->query('segment');
     }
 }

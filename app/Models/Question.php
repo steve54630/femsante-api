@@ -9,7 +9,7 @@ class Question extends Model
 {
     use HasFactory;
 
-    protected $table = 'QUESTIONS';
+    protected $table = 'questions';
     protected $primaryKey = 'QUEST_ID';
     public $timestamps = false; // pas de created_at / updated_at
 
