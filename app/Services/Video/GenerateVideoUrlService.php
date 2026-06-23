@@ -9,8 +9,9 @@ class GenerateVideoUrlService
 
     public function __construct()
     {
-        $this->apiToken = env('API_TOKEN_SECRET');
-        $this->hashSecret = env('HASH_SECRET');
+        // Lecture via config() (et non env() direct) pour rester compatible config:cache.
+        $this->apiToken = (string) config('services.video.token');
+        $this->hashSecret = (string) config('services.video.hash_secret');
 
         if (!$this->apiToken || !$this->hashSecret) {
             throw new \RuntimeException('Token API ou hash non configuré');
@@ -19,8 +20,9 @@ class GenerateVideoUrlService
 
     public function __invoke(string $video, ?string $authorizationHeader = null): array
     {
-        // Vérification de l'autorisation
-        if ($authorizationHeader !== 'Bearer ' . $this->apiToken) {
+        // Vérification de l'autorisation à temps constant (évite les timing attacks).
+        $expected = 'Bearer ' . $this->apiToken;
+        if (!is_string($authorizationHeader) || !hash_equals($expected, $authorizationHeader)) {
             return [
                 'success' => false,
                 'error' => 'Accès non autorisé',

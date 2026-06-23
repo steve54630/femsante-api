@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Accès vidéo mobile : token Bearer attendu de l'app + secret HMAC des URLs.
+    // env() doit rester dans les fichiers config/ pour être compatible config:cache.
+    'video' => [
+        'token' => env('API_TOKEN_SECRET'),
+        'hash_secret' => env('HASH_SECRET'),
+    ],
+
 ];
