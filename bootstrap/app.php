@@ -11,8 +11,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // API only : un utilisateur non authentifie n'est jamais redirige vers une route
+        // "login" (inexistante ici). Evite RouteNotFoundException dans le middleware
+        // auth:sanctum quand la requete n'envoie pas Accept: application/json.
+        $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // API only : une requete non authentifiee renvoie toujours un 401 JSON, jamais
+        // une redirection vers une route "login" (qui n'existe pas ici et provoquait
+        // RouteNotFoundException sur les routes protegees par auth:sanctum).
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Non authentifié',
+            ], 401);
+        });
     })->create();

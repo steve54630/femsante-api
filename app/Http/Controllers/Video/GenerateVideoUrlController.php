@@ -16,10 +16,11 @@ class GenerateVideoUrlController
 
     public function __invoke(Request $request)
     {
+        // L'authentification est desormais assuree par le middleware auth:sanctum ;
+        // le controleur n'a plus a verifier le token lui-meme.
         $video = $request->query('video');
-        $authHeader = $request->header('Authorization');
 
-        $result = ($this->service)($video, $authHeader);
+        $result = ($this->service)($video);
 
         return response()->json($result, $result['http_code']);
     }

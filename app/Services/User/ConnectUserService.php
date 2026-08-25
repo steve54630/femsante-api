@@ -44,9 +44,15 @@ class ConnectUserService
             ];
         }
 
+        // Un seul token actif par utilisatrice : on revoque les anciens avant d'en
+        // emettre un neuf (expiration 30 jours).
+        $user->tokens()->delete();
+        $token = $user->createToken('mobile', ['*'], now()->addDays(30))->plainTextToken;
+
         return [
             'success' => true,
             'user' => $user,
+            'token' => $token,
             'A vie' => is_null($user->VALID_DATE),
             'http_code' => 200,
         ];
