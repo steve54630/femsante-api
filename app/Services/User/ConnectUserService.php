@@ -5,7 +5,6 @@ namespace App\Services\User;
 use App\Http\Request\User\ConnectUserRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 
 class ConnectUserService
 {
@@ -34,20 +33,14 @@ class ConnectUserService
             ];
         }
 
-        // Vérifie si l'abonnement est expiré
-        if ($user->VALID_DATE && Carbon::parse($user->VALID_DATE)->lt(Carbon::today())) {
-            return [
-                'success' => false,
-                'error' => 'Veuillez renouveler votre abonnement',
-                'repay' => true,
-                'http_code' => 400,
-            ];
-        }
-
+        // Modèle freemium : un abonnement expiré (ou jamais souscrit) n'empêche plus la
+        // connexion — elle navigue en gratuit, 'acces' indique simplement l'absence d'accès
+        // premium.
         return [
             'success' => true,
             'user' => $user,
-            'A vie' => is_null($user->VALID_DATE),
+            'acces' => $user->hasAccess(),
+            'A vie' => $user->LIFETIME_PURCHASED,
             'http_code' => 200,
         ];
     }

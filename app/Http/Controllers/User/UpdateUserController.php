@@ -17,6 +17,6 @@ class UpdateUserController
     public function __invoke(UpdateUserRequest $request)
     {
         $result = $this->service->__invoke($request);
-        return response()->json($result);
+        return response()->json($result, $result['http_code'] ?? 200);
     }
 }
