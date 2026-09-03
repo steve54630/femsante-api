@@ -3,6 +3,7 @@
 namespace App\Services\User;
 
 use App\Http\Request\User\UpdateUserRequest;
+use App\Models\PaymentOrder;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -26,6 +27,23 @@ class UpdateUserService
             ];
         }
 
+        // L'accès n'est accordé que s'il existe un paiement réellement capturé et
+        // encore non consommé, pour ce compte et ce palier exact — jamais sur la
+        // simple confiance du "days" envoyé par le client.
+        $order = PaymentOrder::where('email', $email)
+            ->where('days', $numberdays)
+            ->where('status', 'captured')
+            ->latest()
+            ->first();
+
+        if (!$order) {
+            return [
+                'success' => false,
+                'error' => "Aucun paiement validé trouvé pour cette offre.",
+                'http_code' => 400,
+            ];
+        }
+
         try {
             if ($numberdays === 'A vie') {
                 $user->VALID_DATE = null;
@@ -39,6 +57,7 @@ class UpdateUserService
             }
 
             $user->save();
+            $order->update(['status' => 'consumed']);
 
             return [
                 'success' => true,

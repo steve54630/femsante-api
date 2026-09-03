@@ -15,6 +15,7 @@ class ReductionController {
 
     public function __invoke(ReductionRequest $request)
     {
-        return $this->service->__invoke($request);
+        $data = $this->service->__invoke($request);
+        return response()->json($data, $data['http_code']);
     }
 }
