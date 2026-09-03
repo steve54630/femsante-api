@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Model {
+class User extends Authenticatable {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory;
+    use HasFactory, HasApiTokens;
 
     protected $table = 'USERS';
     protected $primaryKey = 'ID';
@@ -50,6 +51,14 @@ class User extends Model {
             'LIFETIME_PURCHASED' => 'boolean',
             'FREE_TRIAL_USED_AT' => 'datetime',
         ];
+    }
+
+    /**
+    * Le mot de passe est stocke dans la colonne PASSWORD (non standard).
+    * On l'indique a Laravel pour l'authentification.
+    */
+    public function getAuthPassword() {
+        return $this->PASSWORD;
     }
 
     /**

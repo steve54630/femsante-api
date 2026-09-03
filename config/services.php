@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Accès vidéo mobile : secret HMAC servant à signer les URLs de streaming.
+    // (L'auth utilisateur passe désormais par Sanctum ; plus de token statique.)
+    // env() doit rester dans les fichiers config/ pour être compatible config:cache.
+    'video' => [
+        'hash_secret' => env('HASH_SECRET'),
+    ],
+
 ];

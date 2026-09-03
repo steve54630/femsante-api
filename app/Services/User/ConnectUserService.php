@@ -36,9 +36,16 @@ class ConnectUserService
         // Modèle freemium : un abonnement expiré (ou jamais souscrit) n'empêche plus la
         // connexion — elle navigue en gratuit, 'acces' indique simplement l'absence d'accès
         // premium.
+
+        // Un seul token actif par utilisatrice : on revoque les anciens avant d'en
+        // emettre un neuf (expiration 30 jours).
+        $user->tokens()->delete();
+        $token = $user->createToken('mobile', ['*'], now()->addDays(30))->plainTextToken;
+
         return [
             'success' => true,
             'user' => $user,
+            'token' => $token,
             'acces' => $user->hasAccess(),
             'A vie' => $user->LIFETIME_PURCHASED,
             'http_code' => 200,

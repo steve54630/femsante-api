@@ -4,30 +4,22 @@ namespace App\Services\Video;
 
 class GenerateVideoUrlService
 {
-    private string $apiToken;
     private string $hashSecret;
 
     public function __construct()
     {
-        $this->apiToken = env('API_TOKEN_SECRET');
-        $this->hashSecret = env('HASH_SECRET');
+        // L'authentification utilisateur est geree par auth:sanctum en amont ; ce service
+        // n'a plus besoin du token statique, seulement du secret HMAC pour signer l'URL.
+        // Lecture via config() (et non env() direct) pour rester compatible config:cache.
+        $this->hashSecret = (string) config('services.video.hash_secret');
 
-        if (!$this->apiToken || !$this->hashSecret) {
-            throw new \RuntimeException('Token API ou hash non configuré');
+        if (!$this->hashSecret) {
+            throw new \RuntimeException('Secret HMAC (HASH_SECRET) non configuré');
         }
     }
 
-    public function __invoke(string $video, ?string $authorizationHeader = null): array
+    public function __invoke(string $video): array
     {
-        // Vérification de l'autorisation
-        if ($authorizationHeader !== 'Bearer ' . $this->apiToken) {
-            return [
-                'success' => false,
-                'error' => 'Accès non autorisé',
-                'http_code' => 401,
-            ];
-        }
-
         if (!$video) {
             return [
                 'success' => false,
