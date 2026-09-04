@@ -4,6 +4,7 @@ namespace App\Services\Paypal;
 
 use App\Http\Request\PayPal\CaptureOrderRequest;
 use App\Models\PaymentOrder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -14,18 +15,26 @@ class CaptureOrderService
         $orderid = $request->input('orderId');
         $accessToken = $request->input('accessToken');
 
-        $order = PaymentOrder::where('order_id', $orderid)->first();
+        // Toute la logique tourne dans une transaction avec verrou de ligne : un premier
+        // check d'idempotence sans verrou laisse passer deux requêtes concurrentes (retry
+        // réseau côté app quasi simultané) qui liraient toutes les deux "created" avant que
+        // l'une ait fini d'écrire — les deux repartiraient alors vers PayPal, et la seconde se
+        // ferait rejeter (ORDER_ALREADY_CAPTURED) au lieu d'être court-circuitée proprement.
+        // lockForUpdate() force la seconde requête à attendre que la première ait committé.
+        return DB::transaction(function () use ($orderid, $accessToken) {
+            $order = PaymentOrder::where('order_id', $orderid)->lockForUpdate()->first();
 
-        // Idempotence : un intent=CAPTURE PayPal ne peut être capturé qu'une seule fois. Un
-        // appel en double (retry réseau côté app, double-tap, etc.) sur une commande déjà
-        // capturée ne doit jamais retaper PayPal — juste confirmer ce qu'on a déjà en base,
-        // sinon l'app reçoit un refus PayPal ("Order already captured") alors que le paiement
-        // a réellement réussi la première fois.
-        if ($order && in_array($order->status, ['captured', 'consumed'], true)) {
-            Log::info("Capture idempotente : order_id=$orderid déjà status={$order->status}, PayPal non re-sollicité.");
-            return ['success' => true, 'http_code' => 200];
-        }
+            if ($order && in_array($order->status, ['captured', 'consumed'], true)) {
+                Log::info("Capture idempotente : order_id=$orderid déjà status={$order->status}, PayPal non re-sollicité.");
+                return ['success' => true, 'http_code' => 200];
+            }
 
+            return $this->captureViaPaypal($orderid, $accessToken, $order);
+        });
+    }
+
+    private function captureViaPaypal(string $orderid, string $accessToken, ?PaymentOrder $order): array
+    {
         // Http::post($url, []) avec un header Content-Type forcé à la main n'envoie pas un
         // corps JSON pour autant (Laravel encode [] en form-urlencoded par défaut) : le corps
         // part vide alors que l'en-tête annonce du JSON, ce que PayPal rejette en
