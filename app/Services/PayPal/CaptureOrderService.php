@@ -22,6 +22,7 @@ class CaptureOrderService
         // sinon l'app reçoit un refus PayPal ("Order already captured") alors que le paiement
         // a réellement réussi la première fois.
         if ($order && in_array($order->status, ['captured', 'consumed'], true)) {
+            Log::info("Capture idempotente : order_id=$orderid déjà status={$order->status}, PayPal non re-sollicité.");
             return ['success' => true, 'http_code' => 200];
         }
 
