@@ -14,6 +14,17 @@ class CaptureOrderService
         $orderid = $request->input('orderId');
         $accessToken = $request->input('accessToken');
 
+        $order = PaymentOrder::where('order_id', $orderid)->first();
+
+        // Idempotence : un intent=CAPTURE PayPal ne peut être capturé qu'une seule fois. Un
+        // appel en double (retry réseau côté app, double-tap, etc.) sur une commande déjà
+        // capturée ne doit jamais retaper PayPal — juste confirmer ce qu'on a déjà en base,
+        // sinon l'app reçoit un refus PayPal ("Order already captured") alors que le paiement
+        // a réellement réussi la première fois.
+        if ($order && in_array($order->status, ['captured', 'consumed'], true)) {
+            return ['success' => true, 'http_code' => 200];
+        }
+
         // Http::post($url, []) avec un header Content-Type forcé à la main n'envoie pas un
         // corps JSON pour autant (Laravel encode [] en form-urlencoded par défaut) : le corps
         // part vide alors que l'en-tête annonce du JSON, ce que PayPal rejette en
@@ -46,8 +57,6 @@ class CaptureOrderService
                 default => ['success' => false, 'http_code' => 500, 'error' => 'Prenez contact avec Paypal pour l\'erreur'] + $result,
             };
         }
-
-        $order = PaymentOrder::where('order_id', $orderid)->first();
 
         if (!$order) {
             // Ne devrait jamais arriver (la commande est créée par notre propre
