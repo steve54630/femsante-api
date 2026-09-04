@@ -9,7 +9,7 @@ class Reduction extends Model
 {
     use HasFactory;
 
-    protected $table = 'reductions';
+    protected $table = 'REDUCTIONS';
     protected $primaryKey = 'REDUC_ID';
     public $timestamps = false;
 
