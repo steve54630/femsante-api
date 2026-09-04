@@ -24,9 +24,14 @@ class CaptureOrderService
             ->post(env('PAYPAL_BASE_URL', 'https://api-m.paypal.com') . "/v2/checkout/orders/$orderid/capture");
 
         if ($captureResponse->failed()) {
+            Log::error("Échec capture PayPal pour order_id=$orderid (HTTP {$captureResponse->status()}) : " . $captureResponse->body());
+
+            $body = $captureResponse->json();
+            $detail = $body['details'][0]['description'] ?? $body['message'] ?? null;
+
             return [
                 'success' => false,
-                'error' => 'Erreur PayPal #: ' . $captureResponse->status(),
+                'error' => $detail ?? ('Erreur PayPal #: ' . $captureResponse->status()),
                 'http_code' => $captureResponse->status(),
             ];
         }
