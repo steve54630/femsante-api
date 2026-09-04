@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Paypal;
 
-use App\Services\Paypal\CreateOrderService;
+use App\Services\PayPal\CreateOrderService;
 use App\Http\Request\PayPal\CreateOrderRequest;
 
 class CreateOrderController

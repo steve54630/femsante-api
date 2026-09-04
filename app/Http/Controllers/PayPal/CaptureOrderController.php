@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Paypal;
 
-use App\Services\Paypal\CaptureOrderService;
+use App\Services\PayPal\CaptureOrderService;
 use App\Http\Request\PayPal\CaptureOrderRequest;
 
 class CaptureOrderController
