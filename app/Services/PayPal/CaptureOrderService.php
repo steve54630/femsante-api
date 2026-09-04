@@ -14,9 +14,14 @@ class CaptureOrderService
         $orderid = $request->input('orderId');
         $accessToken = $request->input('accessToken');
 
+        // Http::post($url, []) avec un header Content-Type forcé à la main n'envoie pas un
+        // corps JSON pour autant (Laravel encode [] en form-urlencoded par défaut) : le corps
+        // part vide alors que l'en-tête annonce du JSON, ce que PayPal rejette en
+        // MALFORMED_REQUEST_JSON. withBody('{}', ...) envoie un corps réellement JSON, conforme
+        // à l'exemple officiel PayPal pour cet endpoint (qui n'attend pas de payload).
         $captureResponse = Http::withToken($accessToken)
-            ->withHeaders(['Content-Type' => 'application/json'])
-            ->post(env('PAYPAL_BASE_URL', 'https://api-m.paypal.com') . "/v2/checkout/orders/$orderid/capture", []);
+            ->withBody('{}', 'application/json')
+            ->post(env('PAYPAL_BASE_URL', 'https://api-m.paypal.com') . "/v2/checkout/orders/$orderid/capture");
 
         if ($captureResponse->failed()) {
             return [
