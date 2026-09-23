@@ -63,7 +63,9 @@ class ServeVideoService
 
     private function generateQualityPlaylist(string $basePath, string $type, string $videoHash, string $titre): string
     {
-        $indexPath = "{$basePath}/{$type}/{$type}.m3u8";
+        // Le transcodage produit "index.m3u8" dans chaque sous-dossier de qualité, pas
+        // "{type}.m3u8".
+        $indexPath = "{$basePath}/{$type}/index.m3u8";
         if (!File::exists($indexPath)) {
             throw new \RuntimeException("Fichier playlist introuvable: {$indexPath}");
         }
